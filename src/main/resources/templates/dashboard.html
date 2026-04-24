@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Operations Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="page-shell">
+    <aside class="sidebar">
+        <div>
+            <p class="eyebrow">Integration Dashboard</p>
+            <h1>Business Operations Hub</h1>
+            <p class="sidebar-copy">
+                Centralise leads, invoicing, and workflow alerts for growing businesses on one operating screen.
+            </p>
+        </div>
+
+        <div class="sidebar-panel">
+            <span class="panel-label">Core modules</span>
+            <ul class="module-list">
+                <li>Lead intake</li>
+                <li>Pipeline visibility</li>
+                <li>Invoice tracking</li>
+                <li>Operational alerts</li>
+            </ul>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a class="nav-link active" th:href="@{/dashboard}">Dashboard</a>
+            <a class="nav-link" th:href="@{/reports}">Reporting</a>
+            <a class="nav-link" th:if="${isAdmin}" th:href="@{/admin/users}">Users</a>
+            <a class="nav-link" th:href="@{/account/security}">Security</a>
+            <form th:action="@{/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button class="nav-button" type="submit">Logout</button>
+            </form>
+        </nav>
+
+        <div class="sidebar-panel accent-panel">
+            <span class="panel-label">Proof of concept</span>
+            <p>Simulated integrations through manual entry, CSV-style source mapping, and webhook ingestion.</p>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <section class="hero-card">
+            <div>
+                <p class="eyebrow">SME Workflow Visibility</p>
+                <h2>One screen to run your business</h2>
+                <p class="hero-copy">
+                    This MVP demonstrates how disconnected operational inputs can be unified into a practical command
+                    centre for teams managing leads, quotes, invoices, and follow-up actions.
+                </p>
+            </div>
+            <div class="hero-stats">
+                <article>
+                    <span>Total Leads</span>
+                    <strong th:text="${dashboard.totalLeads}">0</strong>
+                </article>
+                <article>
+                    <span>Pending Invoices</span>
+                    <strong th:text="${dashboard.pendingInvoices}">0</strong>
+                </article>
+                <article>
+                    <span>Overdue Alerts</span>
+                    <strong th:text="${dashboard.overdueInvoices}">0</strong>
+                </article>
+                <article>
+                    <span>Open Revenue</span>
+                    <strong th:text="|R ${#numbers.formatDecimal(dashboard.openRevenue, 1, 'COMMA', 2, 'POINT')}|">R 0.00</strong>
+                </article>
+            </div>
+        </section>
+
+        <section class="content-grid">
+            <section class="card chart-card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Pipeline</p>
+                        <h3>Lead Status Overview</h3>
+                    </div>
+                </div>
+                <div class="pipeline-grid">
+                    <div class="pipeline-pill" th:each="entry : ${dashboard.leadPipeline}">
+                        <span th:text="${entry.key}">NEW</span>
+                        <strong th:text="${entry.value}">0</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card notifications-card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Alerts</p>
+                        <h3>Recent Notifications</h3>
+                    </div>
+                    <span class="badge" th:text="${dashboard.unreadNotifications} + ' unread'">0 unread</span>
+                </div>
+                <div class="notification-list">
+                    <article class="notification-item" th:each="notification : ${dashboard.notifications}">
+                        <div class="notification-marker" th:classappend="${' ' + #strings.toLowerCase(notification.type.name())}"></div>
+                        <div>
+                            <p th:text="${notification.message}">Notification message</p>
+                            <span th:text="${#temporals.format(notification.createdAt, 'dd MMM yyyy HH:mm')}">24 Apr 2026 09:00</span>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </section>
+
+        <section class="content-grid forms-grid">
+            <section class="card form-card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Lead Intake</p>
+                        <h3>Add a Lead</h3>
+                    </div>
+                </div>
+                <form id="lead-form" class="stack">
+                    <div class="input-grid">
+                        <label>
+                            Full name
+                            <input name="name" placeholder="Nandi Mokoena" required>
+                        </label>
+                        <label>
+                            Company
+                            <input name="company" placeholder="Luma Studio" required>
+                        </label>
+                        <label>
+                            Email
+                            <input type="email" name="email" placeholder="lead@company.co.za" required>
+                        </label>
+                        <label>
+                            Phone
+                            <input name="phone" placeholder="+27 82 555 0111" required>
+                        </label>
+                        <label>
+                            Source
+                            <select name="source">
+                                <option th:each="source : ${leadSources}" th:value="${source}" th:text="${source}"></option>
+                            </select>
+                        </label>
+                    </div>
+                    <label>
+                        Notes
+                        <textarea name="notes" rows="4" placeholder="Brief context for the sales team"></textarea>
+                    </label>
+                    <button type="submit">Create Lead</button>
+                </form>
+            </section>
+
+            <section class="card form-card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">CSV Import</p>
+                        <h3>Import Lead Spreadsheet</h3>
+                    </div>
+                </div>
+                <form id="csv-import-form" class="stack">
+                    <label class="file-drop">
+                        Upload CSV
+                        <input type="file" name="file" accept=".csv,text/csv" required>
+                    </label>
+                    <p class="form-hint">Expected columns: <code>name,email,phone,company</code>. Optional: <code>notes,source</code>.</p>
+                    <button type="submit">Import Leads</button>
+                </form>
+            </section>
+
+            <section class="card form-card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Invoice Tracker</p>
+                        <h3>Create an Invoice</h3>
+                    </div>
+                </div>
+                <form id="invoice-form" class="stack">
+                    <div class="input-grid">
+                        <label>
+                            Client name
+                            <input name="clientName" placeholder="Craft Logic" required>
+                        </label>
+                        <label>
+                            Amount (ZAR)
+                            <input type="number" min="0.01" step="0.01" name="amount" placeholder="18500.00" required>
+                        </label>
+                        <label>
+                            Due date
+                            <input type="date" name="dueDate" required>
+                        </label>
+                        <label>
+                            Related lead
+                            <select name="leadId">
+                                <option value="">Unlinked</option>
+                                <option th:each="lead : ${dashboard.recentLeads}" th:value="${lead.id}"
+                                        th:text="${lead.name + ' - ' + lead.company}"></option>
+                            </select>
+                        </label>
+                    </div>
+                    <button type="submit">Create Invoice</button>
+                </form>
+            </section>
+        </section>
+
+        <section class="content-grid data-grid">
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Leads</p>
+                        <h3>Pipeline Board</h3>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Company</th>
+                            <th>Source</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="lead-table-body">
+                        <tr th:each="lead : ${dashboard.recentLeads}">
+                            <td>
+                                <strong th:text="${lead.name}">Nandi</strong>
+                                <span th:text="${lead.email}">lead@email.com</span>
+                            </td>
+                            <td th:text="${lead.company}">Luma Studio</td>
+                            <td th:text="${lead.source}">WEBSITE</td>
+                            <td>
+                                <select class="status-select lead-status-select" th:attr="data-id=${lead.id}">
+                                    <option th:each="status : ${leadStatuses}" th:value="${status}" th:text="${status}"
+                                            th:selected="${status == lead.status}"></option>
+                                </select>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Invoices</p>
+                        <h3>Collections Monitor</h3>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th>Invoice</th>
+                            <th>Client</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="invoice-table-body">
+                        <tr th:each="invoice : ${dashboard.recentInvoices}">
+                            <td>
+                                <strong th:text="${invoice.invoiceNumber}">INV-001</strong>
+                                <span th:text="${#temporals.format(invoice.dueDate, 'dd MMM yyyy')}">30 Apr 2026</span>
+                            </td>
+                            <td th:text="${invoice.clientName}">Craft Logic</td>
+                            <td th:text="|R ${#numbers.formatDecimal(invoice.amount, 1, 'COMMA', 2, 'POINT')}|">R 18,500.00</td>
+                            <td>
+                                <select class="status-select invoice-status-select" th:attr="data-id=${invoice.id}">
+                                    <option th:each="status : ${invoiceStatuses}" th:value="${status}" th:text="${status}"
+                                            th:selected="${status == invoice.status}"></option>
+                                </select>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </section>
+    </main>
+</div>
+
+<div id="toast" class="toast" aria-live="polite"></div>
+
+<script th:src="@{/js/dashboard.js}"></script>
+</body>
+</html>

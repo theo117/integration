@@ -1,0 +1,39 @@
+services:
+  - type: web
+    name: business-operations-hub
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: commit
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: render
+      - key: BUSINESSHUB_EMAIL_ENABLED
+        value: false
+      - key: BUSINESSHUB_SECURITY_ADMIN_USERNAME
+        value: admin
+      - key: BUSINESSHUB_SECURITY_ADMIN_PASSWORD
+        generateValue: true
+      - key: BUSINESSHUB_SECURITY_OPS_USERNAME
+        value: ops
+      - key: BUSINESSHUB_SECURITY_OPS_PASSWORD
+        generateValue: true
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: business-operations-hub-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: business-operations-hub-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: business-operations-hub-db
+          property: password
+
+databases:
+  - name: business-operations-hub-db
+    plan: free
+    databaseName: businesshub
+    user: businesshub

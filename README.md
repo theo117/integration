@@ -72,6 +72,9 @@ H2 connection settings:
 
 ## API endpoints
 
+Browser-driven write requests are protected by Spring Security CSRF tokens. The Thymeleaf pages expose the token as
+metadata and `dashboard.js` attaches it to JSON and CSV upload requests automatically.
+
 - `GET /api/dashboard`
 - `GET /api/reports`
 - `GET /api/leads`

@@ -81,4 +81,34 @@ class LeadCsvImportServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Missing required CSV columns");
     }
+
+    @Test
+    void importCsvReportsMalformedQuotedRowsAsSkipped() {
+        NotificationService notificationService = new NotificationService(notificationRepository);
+        LeadCsvImportService leadCsvImportService = new LeadCsvImportService(leadRepository, notificationService);
+
+        String csv = """
+                name,email,phone,company,notes
+                Nandi,nandi@example.com,+27 82 555 0111,Luma Studio,"Missing the closing quote
+                Aisha,aisha@example.com,+27 82 555 0113,Harbour Retail,Valid row
+                """;
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "leads.csv",
+                "text/csv",
+                csv.getBytes(StandardCharsets.UTF_8)
+        );
+
+        when(leadRepository.save(any(Lead.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(notificationRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LeadImportResponse response = leadCsvImportService.importCsv(file);
+
+        assertThat(response.importedCount()).isEqualTo(1);
+        assertThat(response.skippedCount()).isEqualTo(1);
+        assertThat(response.errors()).containsExactly("Row 2: Malformed CSV row: missing closing quote");
+        verify(leadRepository).save(any(Lead.class));
+        verify(notificationRepository).save(any());
+    }
 }

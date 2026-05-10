@@ -174,6 +174,10 @@ public class LeadCsvImportService {
             }
         }
 
+        if (inQuotes) {
+            throw new IllegalArgumentException("Malformed CSV row: missing closing quote");
+        }
+
         values.add(current.toString());
         return values;
     }

@@ -6,14 +6,25 @@ const showToast = (message) => {
     window.setTimeout(() => toast.classList.remove("visible"), 2600);
 };
 
+const getCsrfHeaders = () => {
+    const token = document.querySelector("meta[name='_csrf']")?.content;
+    const headerName = document.querySelector("meta[name='_csrf_header']")?.content;
+    return token && headerName ? {[headerName]: token} : {};
+};
+
 const request = async (url, options = {}) => {
     const isFormData = options.body instanceof FormData;
+    const headers = {
+        ...getCsrfHeaders(),
+        ...options.headers
+    };
+
     const response = await fetch(url, {
-        headers: isFormData ? options.headers : {
+        ...options,
+        headers: isFormData ? headers : {
             "Content-Type": "application/json",
-            ...options.headers
-        },
-        ...options
+            ...headers
+        }
     });
 
     if (!response.ok) {

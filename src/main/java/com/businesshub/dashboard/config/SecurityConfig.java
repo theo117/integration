@@ -32,7 +32,7 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout")
                 )
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/**", "/h2-console/**")
+                        .ignoringRequestMatchers("/h2-console/**")
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 

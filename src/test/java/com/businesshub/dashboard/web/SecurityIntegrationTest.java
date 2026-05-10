@@ -9,6 +9,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -44,6 +47,15 @@ class SecurityIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void dashboardIncludesCsrfMetadataForApiRequests() throws Exception {
+        mockMvc.perform(get("/dashboard"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"_csrf\"")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("name=\"_csrf_header\"")));
+    }
+
+    @Test
     @WithMockUser(username = "ops", roles = "OPS")
     void opsUserCannotAccessUsersPage() throws Exception {
         mockMvc.perform(get("/admin/users"))
@@ -68,6 +80,25 @@ class SecurityIntegrationTest {
     void actuatorHealthIsPublic() throws Exception {
         mockMvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void unsafeApiRequestsRequireCsrfToken() throws Exception {
+        mockMvc.perform(post("/api/users")
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void unsafeApiRequestsAcceptCsrfToken() throws Exception {
+        mockMvc.perform(post("/api/users")
+                        .with(csrf())
+                        .contentType("application/json")
+                        .content("{}"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

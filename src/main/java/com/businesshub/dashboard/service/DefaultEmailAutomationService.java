@@ -4,6 +4,7 @@ import com.businesshub.dashboard.config.EmailAutomationProperties;
 import com.businesshub.dashboard.domain.Invoice;
 import com.businesshub.dashboard.domain.Lead;
 import com.businesshub.dashboard.domain.LeadStatus;
+import com.businesshub.dashboard.integration.EmailNotificationAdapter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
@@ -18,11 +19,14 @@ public class DefaultEmailAutomationService implements EmailAutomationService {
 
     private final JavaMailSender javaMailSender;
     private final EmailAutomationProperties emailAutomationProperties;
+    private final EmailNotificationAdapter emailNotificationAdapter;
 
     public DefaultEmailAutomationService(ObjectProvider<JavaMailSender> javaMailSenderProvider,
-                                         EmailAutomationProperties emailAutomationProperties) {
+                                         EmailAutomationProperties emailAutomationProperties,
+                                         EmailNotificationAdapter emailNotificationAdapter) {
         this.javaMailSender = javaMailSenderProvider.getIfAvailable();
         this.emailAutomationProperties = emailAutomationProperties;
+        this.emailNotificationAdapter = emailNotificationAdapter;
     }
 
     @Override
@@ -82,11 +86,13 @@ public class DefaultEmailAutomationService implements EmailAutomationService {
     private void sendMessage(String to, String subject, String body) {
         if (!emailAutomationProperties.isEnabled()) {
             log.info("Email automation disabled. Would send email to {} with subject '{}'", to, subject);
+            emailNotificationAdapter.recordSkipped(to, subject, "Email automation is disabled.");
             return;
         }
 
         if (javaMailSender == null) {
             log.warn("Email automation enabled but no JavaMailSender is configured. Skipping email to {} with subject '{}'", to, subject);
+            emailNotificationAdapter.recordSkipped(to, subject, "No JavaMailSender is configured.");
             return;
         }
 
@@ -95,6 +101,13 @@ public class DefaultEmailAutomationService implements EmailAutomationService {
         message.setTo(to);
         message.setSubject(subject);
         message.setText(body);
-        javaMailSender.send(message);
+        try {
+            javaMailSender.send(message);
+            emailNotificationAdapter.recordSent(to, subject);
+        } catch (RuntimeException exception) {
+            emailNotificationAdapter.recordFailure(to, subject, exception);
+            log.warn("Email delivery failed for {} with subject '{}'. The business action was kept and the failure was logged for retry review.",
+                    to, subject, exception);
+        }
     }
 }

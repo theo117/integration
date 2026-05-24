@@ -2,6 +2,7 @@ package com.businesshub.dashboard.web.response;
 
 import com.businesshub.dashboard.domain.AppUser;
 import com.businesshub.dashboard.domain.AppNotification;
+import com.businesshub.dashboard.domain.IntegrationEvent;
 import com.businesshub.dashboard.domain.Invoice;
 import com.businesshub.dashboard.domain.Lead;
 import com.businesshub.dashboard.service.DashboardService;
@@ -80,6 +81,24 @@ public class ApiResponseMapper {
                 appUser.getRole(),
                 appUser.isActive(),
                 appUser.getCreatedAt()
+        );
+    }
+
+    public IntegrationEventResponse toIntegrationEventResponse(IntegrationEvent event) {
+        return new IntegrationEventResponse(
+                event.getId(),
+                event.getDirection(),
+                event.getType(),
+                event.getProvider(),
+                event.getStatus(),
+                event.getSummary(),
+                event.getDetail(),
+                event.getErrorMessage(),
+                event.getReferenceType(),
+                event.getReferenceId(),
+                event.getAttempts(),
+                event.getNextRetryAt(),
+                event.getCreatedAt()
         );
     }
 

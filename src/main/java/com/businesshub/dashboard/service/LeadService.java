@@ -3,6 +3,8 @@ package com.businesshub.dashboard.service;
 import com.businesshub.dashboard.domain.Lead;
 import com.businesshub.dashboard.domain.LeadSource;
 import com.businesshub.dashboard.domain.LeadStatus;
+import com.businesshub.dashboard.domain.IntegrationEventStatus;
+import com.businesshub.dashboard.domain.IntegrationEventType;
 import com.businesshub.dashboard.domain.NotificationType;
 import com.businesshub.dashboard.repository.LeadRepository;
 import com.businesshub.dashboard.web.request.CreateLeadRequest;
@@ -17,13 +19,16 @@ public class LeadService {
     private final LeadRepository leadRepository;
     private final NotificationService notificationService;
     private final EmailAutomationService emailAutomationService;
+    private final IntegrationEventService integrationEventService;
 
     public LeadService(LeadRepository leadRepository,
                        NotificationService notificationService,
-                       EmailAutomationService emailAutomationService) {
+                       EmailAutomationService emailAutomationService,
+                       IntegrationEventService integrationEventService) {
         this.leadRepository = leadRepository;
         this.notificationService = notificationService;
         this.emailAutomationService = emailAutomationService;
+        this.integrationEventService = integrationEventService;
     }
 
     public List<Lead> getAllLeads() {
@@ -63,6 +68,10 @@ public class LeadService {
         NotificationType type = status == LeadStatus.WON ? NotificationType.SUCCESS : NotificationType.INFO;
         notificationService.create(type,
                 "Lead " + updatedLead.getName() + " moved to " + status);
+        integrationEventService.inbound(IntegrationEventType.LEAD_STATUS_EVENT, "Pipeline workflow",
+                IntegrationEventStatus.PROCESSED, "Lead status changed",
+                updatedLead.getName() + " moved from " + previousStatus + " to " + status,
+                "Lead", updatedLead.getId());
         emailAutomationService.sendLeadStatusChangedEmail(updatedLead, previousStatus);
         return updatedLead;
     }

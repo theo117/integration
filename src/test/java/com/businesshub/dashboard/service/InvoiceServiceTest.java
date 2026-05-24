@@ -38,6 +38,9 @@ class InvoiceServiceTest {
     @Mock
     private EmailAutomationService emailAutomationService;
 
+    @Mock
+    private IntegrationEventService integrationEventService;
+
     @Test
     void createInvoiceMarksPastDueInvoiceAsOverdue() {
         NotificationService notificationService = new NotificationService(notificationRepository);
@@ -45,7 +48,8 @@ class InvoiceServiceTest {
                 invoiceRepository,
                 leadRepository,
                 notificationService,
-                emailAutomationService
+                emailAutomationService,
+                integrationEventService
         );
 
         CreateInvoiceRequest request = new CreateInvoiceRequest();
@@ -81,7 +85,8 @@ class InvoiceServiceTest {
                 invoiceRepository,
                 leadRepository,
                 notificationService,
-                emailAutomationService
+                emailAutomationService,
+                integrationEventService
         );
 
         Invoice pendingInvoice = new Invoice();

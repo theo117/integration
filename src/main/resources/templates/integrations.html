@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Integrations | Business Operations Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<div class="page-shell">
+    <aside class="sidebar">
+        <div>
+            <p class="eyebrow">Integration Centre</p>
+            <h1>Integration Events</h1>
+            <p class="sidebar-copy">
+                Track inbound lead capture, spreadsheet imports, workflow events, and outbound email automation.
+            </p>
+        </div>
+
+        <div class="sidebar-panel">
+            <span class="panel-label">Connected paths</span>
+            <ul class="module-list">
+                <li>Website lead API</li>
+                <li>Signed webhook intake</li>
+                <li>CSV spreadsheet import</li>
+                <li>Email automation events</li>
+            </ul>
+        </div>
+
+        <nav class="sidebar-nav">
+            <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
+            <a class="nav-link active" th:href="@{/integrations}">Integrations</a>
+            <a class="nav-link" th:if="${isAdmin}" th:href="@{/reports}">Reporting</a>
+            <a class="nav-link" th:if="${isAdmin}" th:href="@{/admin/users}">Users</a>
+            <a class="nav-link" th:href="@{/account/security}">Security</a>
+            <form th:action="@{/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button class="nav-button" type="submit">Logout</button>
+            </form>
+        </nav>
+
+        <div class="sidebar-panel accent-panel">
+            <span class="panel-label">Signed in as</span>
+            <p th:text="${currentUsername}">ops</p>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <section class="hero-card">
+            <div>
+                <p class="eyebrow">System Boundaries</p>
+                <h2>Show what entered, what left, and what changed</h2>
+                <p class="hero-copy">
+                    The event log makes the integration story visible by recording provider, direction, status,
+                    business reference, and retry timing for external-style flows.
+                </p>
+            </div>
+            <div class="hero-stats">
+                <article>
+                    <span>Recent Events</span>
+                    <strong th:text="${integrationEvents.size()}">0</strong>
+                </article>
+                <article>
+                    <span>Webhook Key</span>
+                    <strong>Signed</strong>
+                </article>
+                <article>
+                    <span>CSV Template</span>
+                    <strong>Ready</strong>
+                </article>
+                <article>
+                    <span>Email Mode</span>
+                    <strong>Tracked</strong>
+                </article>
+            </div>
+        </section>
+
+        <section class="content-grid">
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Inbound</p>
+                        <h3>Accepted Sources</h3>
+                    </div>
+                </div>
+                <div class="metric-grid">
+                    <div class="metric-tile">
+                        <span>Manual/API leads</span>
+                        <strong>Website</strong>
+                    </div>
+                    <div class="metric-tile">
+                        <span>Webhook leads</span>
+                        <strong>Keyed</strong>
+                    </div>
+                    <div class="metric-tile">
+                        <span>Spreadsheet leads</span>
+                        <strong>CSV</strong>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <div>
+                        <p class="eyebrow">Outbound</p>
+                        <h3>Email Automation</h3>
+                    </div>
+                </div>
+                <div class="report-highlight">
+                    <span>Delivery state</span>
+                    <strong>Logged</strong>
+                    <p>Disabled, sent, and failed email attempts are written to integration events for review.</p>
+                </div>
+            </section>
+        </section>
+
+        <section class="card">
+            <div class="card-header">
+                <div>
+                    <p class="eyebrow">Event Log</p>
+                    <h3>Latest Integration Activity</h3>
+                </div>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Direction</th>
+                        <th>Provider</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                        <th>Summary</th>
+                        <th>Reference</th>
+                        <th>Retry</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${integrationEvents.isEmpty()}">
+                        <td colspan="8">No integration events have been recorded yet.</td>
+                    </tr>
+                    <tr th:each="event : ${integrationEvents}">
+                        <td th:text="${#temporals.format(event.createdAt, 'dd MMM yyyy HH:mm')}">24 May 2026 12:00</td>
+                        <td th:text="${event.direction}">INBOUND</td>
+                        <td th:text="${event.provider}">Website form</td>
+                        <td th:text="${event.type}">WEBSITE_LEAD</td>
+                        <td>
+                            <span class="event-status"
+                                  th:classappend="${' ' + #strings.toLowerCase(event.status.name())}"
+                                  th:text="${event.status}">PROCESSED</span>
+                        </td>
+                        <td>
+                            <strong th:text="${event.summary}">Lead captured</strong>
+                            <span th:if="${event.detail}" th:text="${event.detail}">Detail</span>
+                            <span th:if="${event.errorMessage}" th:text="${event.errorMessage}">Error</span>
+                        </td>
+                        <td>
+                            <span th:if="${event.referenceType}" th:text="${event.referenceType + ' #' + event.referenceId}">Lead #1</span>
+                            <span th:unless="${event.referenceType}">None</span>
+                        </td>
+                        <td>
+                            <span th:if="${event.nextRetryAt}" th:text="${#temporals.format(event.nextRetryAt, 'dd MMM yyyy HH:mm')}">24 May 2026 12:15</span>
+                            <span th:unless="${event.nextRetryAt}">None</span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+</body>
+</html>

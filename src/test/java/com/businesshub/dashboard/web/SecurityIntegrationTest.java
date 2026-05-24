@@ -44,8 +44,23 @@ class SecurityIntegrationTest {
     void opsUserDoesNotSeeAdminOnlyNavigationLinks() throws Exception {
         mockMvc.perform(get("/dashboard"))
                 .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("href=\"/integrations\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("href=\"/reports\""))))
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("href=\"/admin/users\""))));
+    }
+
+    @Test
+    @WithMockUser(username = "ops", roles = "OPS")
+    void opsUserCanAccessIntegrationsPage() throws Exception {
+        mockMvc.perform(get("/integrations"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void adminUserCanAccessIntegrationsPage() throws Exception {
+        mockMvc.perform(get("/integrations"))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -89,6 +104,13 @@ class SecurityIntegrationTest {
     void actuatorHealthIsPublic() throws Exception {
         mockMvc.perform(get("/actuator/health"))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void csvTemplateIsPublic() throws Exception {
+        mockMvc.perform(get("/samples/lead-import-template.csv"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("name,email,phone,company,notes,source\n"));
     }
 
     @Test

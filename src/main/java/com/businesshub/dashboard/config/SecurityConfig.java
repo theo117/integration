@@ -14,9 +14,11 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/css/**", "/js/**", "/login", "/actuator/health", "/actuator/info").permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/samples/**", "/login", "/actuator/health", "/actuator/info").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/api/leads/webhook").permitAll()
                         .requestMatchers("/api/users/account/password").hasAnyRole("ADMIN", "OPS")
+                        .requestMatchers("/integrations", "/api/integrations/**").hasAnyRole("ADMIN", "OPS")
                         .requestMatchers("/reports", "/api/reports", "/admin/**", "/api/users/**").hasRole("ADMIN")
                         .requestMatchers("/account/**", "/api/account/**").hasAnyRole("ADMIN", "OPS")
                         .requestMatchers("/dashboard", "/", "/api/dashboard", "/api/leads/**", "/api/invoices/**")
@@ -32,7 +34,7 @@ public class SecurityConfig {
                         .logoutSuccessUrl("/login?logout")
                 )
                 .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/h2-console/**")
+                        .ignoringRequestMatchers("/h2-console/**", "/api/leads/webhook")
                 )
                 .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 

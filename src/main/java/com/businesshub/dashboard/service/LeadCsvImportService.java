@@ -3,6 +3,8 @@ package com.businesshub.dashboard.service;
 import com.businesshub.dashboard.domain.Lead;
 import com.businesshub.dashboard.domain.LeadSource;
 import com.businesshub.dashboard.domain.LeadStatus;
+import com.businesshub.dashboard.domain.IntegrationEventStatus;
+import com.businesshub.dashboard.domain.IntegrationEventType;
 import com.businesshub.dashboard.domain.NotificationType;
 import com.businesshub.dashboard.repository.LeadRepository;
 import com.businesshub.dashboard.web.request.CreateLeadRequest;
@@ -25,10 +27,14 @@ public class LeadCsvImportService {
 
     private final LeadRepository leadRepository;
     private final NotificationService notificationService;
+    private final IntegrationEventService integrationEventService;
 
-    public LeadCsvImportService(LeadRepository leadRepository, NotificationService notificationService) {
+    public LeadCsvImportService(LeadRepository leadRepository,
+                                NotificationService notificationService,
+                                IntegrationEventService integrationEventService) {
         this.leadRepository = leadRepository;
         this.notificationService = notificationService;
+        this.integrationEventService = integrationEventService;
     }
 
     public LeadImportResponse importCsv(MultipartFile file) {
@@ -75,6 +81,9 @@ public class LeadCsvImportService {
 
         notificationService.create(NotificationType.INFO,
                 "CSV import completed: " + importedCount + " leads imported, " + skippedCount + " skipped");
+        integrationEventService.inbound(IntegrationEventType.CSV_IMPORT, "CSV upload",
+                IntegrationEventStatus.PROCESSED, "CSV import completed",
+                importedCount + " imported, " + skippedCount + " skipped", null, null);
 
         return new LeadImportResponse(importedCount, skippedCount, errors);
     }

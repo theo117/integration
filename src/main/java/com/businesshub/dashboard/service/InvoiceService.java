@@ -2,6 +2,8 @@ package com.businesshub.dashboard.service;
 
 import com.businesshub.dashboard.domain.Invoice;
 import com.businesshub.dashboard.domain.InvoiceStatus;
+import com.businesshub.dashboard.domain.IntegrationEventStatus;
+import com.businesshub.dashboard.domain.IntegrationEventType;
 import com.businesshub.dashboard.domain.Lead;
 import com.businesshub.dashboard.domain.NotificationType;
 import com.businesshub.dashboard.repository.InvoiceRepository;
@@ -21,15 +23,18 @@ public class InvoiceService {
     private final LeadRepository leadRepository;
     private final NotificationService notificationService;
     private final EmailAutomationService emailAutomationService;
+    private final IntegrationEventService integrationEventService;
 
     public InvoiceService(InvoiceRepository invoiceRepository,
                           LeadRepository leadRepository,
                           NotificationService notificationService,
-                          EmailAutomationService emailAutomationService) {
+                          EmailAutomationService emailAutomationService,
+                          IntegrationEventService integrationEventService) {
         this.invoiceRepository = invoiceRepository;
         this.leadRepository = leadRepository;
         this.notificationService = notificationService;
         this.emailAutomationService = emailAutomationService;
+        this.integrationEventService = integrationEventService;
     }
 
     public List<Invoice> getAllInvoices() {
@@ -61,6 +66,10 @@ public class InvoiceService {
         Invoice savedInvoice = invoiceRepository.save(invoice);
         notificationService.create(NotificationType.INFO,
                 "Invoice " + savedInvoice.getInvoiceNumber() + " created for " + savedInvoice.getClientName());
+        integrationEventService.inbound(IntegrationEventType.INVOICE_EVENT, "Invoice workflow",
+                IntegrationEventStatus.PROCESSED, "Invoice created",
+                savedInvoice.getInvoiceNumber() + " for " + savedInvoice.getClientName(),
+                "Invoice", savedInvoice.getId());
         emailAutomationService.sendInvoiceCreatedEmail(savedInvoice);
         return savedInvoice;
     }
@@ -75,6 +84,10 @@ public class InvoiceService {
         NotificationType type = status == InvoiceStatus.PAID ? NotificationType.SUCCESS : NotificationType.WARNING;
         notificationService.create(type,
                 "Invoice " + updatedInvoice.getInvoiceNumber() + " marked as " + status);
+        integrationEventService.inbound(IntegrationEventType.INVOICE_EVENT, "Invoice workflow",
+                IntegrationEventStatus.PROCESSED, "Invoice status changed",
+                updatedInvoice.getInvoiceNumber() + " marked as " + status,
+                "Invoice", updatedInvoice.getId());
         if (status == InvoiceStatus.PAID) {
             emailAutomationService.sendInvoicePaidEmail(updatedInvoice);
         }
@@ -90,6 +103,9 @@ public class InvoiceService {
                 invoiceRepository.save(invoice);
                 notificationService.create(NotificationType.WARNING,
                         "Invoice " + invoice.getInvoiceNumber() + " is overdue");
+                integrationEventService.inbound(IntegrationEventType.INVOICE_EVENT, "Invoice workflow",
+                        IntegrationEventStatus.PROCESSED, "Invoice marked overdue",
+                        invoice.getInvoiceNumber() + " passed due date", "Invoice", invoice.getId());
                 emailAutomationService.sendInvoiceOverdueEmail(invoice);
             }
         }

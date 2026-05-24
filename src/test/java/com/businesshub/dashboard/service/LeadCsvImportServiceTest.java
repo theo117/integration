@@ -30,10 +30,13 @@ class LeadCsvImportServiceTest {
     @Mock
     private NotificationRepository notificationRepository;
 
+    @Mock
+    private IntegrationEventService integrationEventService;
+
     @Test
     void importCsvCreatesLeadsAndReportsSkippedRows() {
         NotificationService notificationService = new NotificationService(notificationRepository);
-        LeadCsvImportService leadCsvImportService = new LeadCsvImportService(leadRepository, notificationService);
+        LeadCsvImportService leadCsvImportService = new LeadCsvImportService(leadRepository, notificationService, integrationEventService);
 
         String csv = """
                 name,email,phone,company,notes,source
@@ -68,7 +71,7 @@ class LeadCsvImportServiceTest {
     @Test
     void importCsvRejectsMissingRequiredHeaders() {
         NotificationService notificationService = new NotificationService(notificationRepository);
-        LeadCsvImportService leadCsvImportService = new LeadCsvImportService(leadRepository, notificationService);
+        LeadCsvImportService leadCsvImportService = new LeadCsvImportService(leadRepository, notificationService, integrationEventService);
 
         MockMultipartFile file = new MockMultipartFile(
                 "file",
@@ -85,7 +88,7 @@ class LeadCsvImportServiceTest {
     @Test
     void importCsvReportsMalformedQuotedRowsAsSkipped() {
         NotificationService notificationService = new NotificationService(notificationRepository);
-        LeadCsvImportService leadCsvImportService = new LeadCsvImportService(leadRepository, notificationService);
+        LeadCsvImportService leadCsvImportService = new LeadCsvImportService(leadRepository, notificationService, integrationEventService);
 
         String csv = """
                 name,email,phone,company,notes

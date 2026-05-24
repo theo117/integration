@@ -4,6 +4,7 @@ import com.businesshub.dashboard.config.EmailAutomationProperties;
 import com.businesshub.dashboard.domain.Invoice;
 import com.businesshub.dashboard.domain.Lead;
 import com.businesshub.dashboard.domain.LeadStatus;
+import com.businesshub.dashboard.integration.EmailNotificationAdapter;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -30,12 +31,15 @@ class DefaultEmailAutomationServiceTest {
     @Mock
     private ObjectProvider<JavaMailSender> javaMailSenderProvider;
 
+    @Mock
+    private EmailNotificationAdapter emailNotificationAdapter;
+
     @Test
     void doesNotSendWhenEmailAutomationDisabled() {
         EmailAutomationProperties properties = new EmailAutomationProperties();
         properties.setEnabled(false);
         org.mockito.Mockito.when(javaMailSenderProvider.getIfAvailable()).thenReturn(javaMailSender);
-        DefaultEmailAutomationService service = new DefaultEmailAutomationService(javaMailSenderProvider, properties);
+        DefaultEmailAutomationService service = new DefaultEmailAutomationService(javaMailSenderProvider, properties, emailNotificationAdapter);
 
         Lead lead = new Lead();
         lead.setName("Nandi");
@@ -56,7 +60,7 @@ class DefaultEmailAutomationServiceTest {
         properties.setFrom("ops@example.com");
         properties.setOpsInbox("ops@example.com");
         org.mockito.Mockito.when(javaMailSenderProvider.getIfAvailable()).thenReturn(javaMailSender);
-        DefaultEmailAutomationService service = new DefaultEmailAutomationService(javaMailSenderProvider, properties);
+        DefaultEmailAutomationService service = new DefaultEmailAutomationService(javaMailSenderProvider, properties, emailNotificationAdapter);
 
         Invoice invoice = new Invoice();
         invoice.setInvoiceNumber("INV-20260424-001");

@@ -6,6 +6,7 @@ import com.businesshub.dashboard.domain.LeadStatus;
 import com.businesshub.dashboard.domain.UserRole;
 import com.businesshub.dashboard.service.AppUserService;
 import com.businesshub.dashboard.service.DashboardService;
+import com.businesshub.dashboard.service.IntegrationEventService;
 import com.businesshub.dashboard.service.ReportingService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -18,13 +19,16 @@ public class DashboardController {
 
     private final AppUserService appUserService;
     private final DashboardService dashboardService;
+    private final IntegrationEventService integrationEventService;
     private final ReportingService reportingService;
 
     public DashboardController(AppUserService appUserService,
                                DashboardService dashboardService,
+                               IntegrationEventService integrationEventService,
                                ReportingService reportingService) {
         this.appUserService = appUserService;
         this.dashboardService = dashboardService;
+        this.integrationEventService = integrationEventService;
         this.reportingService = reportingService;
     }
 
@@ -43,6 +47,13 @@ public class DashboardController {
         model.addAttribute("reporting", reportingService.getReportingView());
         addShellContext(model, authentication);
         return "reports";
+    }
+
+    @GetMapping("/integrations")
+    public String integrations(Model model, Authentication authentication) {
+        model.addAttribute("integrationEvents", integrationEventService.getRecentEvents());
+        addShellContext(model, authentication);
+        return "integrations";
     }
 
     @GetMapping("/admin/users")
@@ -76,7 +87,11 @@ public class DashboardController {
         boolean isAdmin = authentication != null && authentication.getAuthorities()
                 .stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+        boolean isOps = authentication != null && authentication.getAuthorities()
+                .stream()
+                .anyMatch(authority -> authority.getAuthority().equals("ROLE_OPS"));
         model.addAttribute("isAdmin", isAdmin);
+        model.addAttribute("canViewIntegrations", isAdmin || isOps);
         model.addAttribute("currentUsername", authentication != null ? authentication.getName() : "");
     }
 }

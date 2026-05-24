@@ -30,10 +30,13 @@ class LeadServiceTest {
     @Mock
     private EmailAutomationService emailAutomationService;
 
+    @Mock
+    private IntegrationEventService integrationEventService;
+
     @Test
     void createLeadDefaultsSourceAndStatusAndCreatesNotification() {
         NotificationService notificationService = new NotificationService(notificationRepository);
-        LeadService leadService = new LeadService(leadRepository, notificationService, emailAutomationService);
+        LeadService leadService = new LeadService(leadRepository, notificationService, emailAutomationService, integrationEventService);
 
         CreateLeadRequest request = new CreateLeadRequest();
         request.setName("Nandi Mokoena");

@@ -1,7 +1,8 @@
 package com.businesshub.dashboard.web.api;
 
-import com.businesshub.dashboard.domain.LeadSource;
-import com.businesshub.dashboard.service.LeadCsvImportService;
+import com.businesshub.dashboard.integration.CsvLeadAdapter;
+import com.businesshub.dashboard.integration.WebhookLeadAdapter;
+import com.businesshub.dashboard.integration.WebsiteLeadAdapter;
 import com.businesshub.dashboard.service.LeadService;
 import com.businesshub.dashboard.web.request.CreateLeadRequest;
 import com.businesshub.dashboard.web.request.UpdateLeadStatusRequest;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -29,14 +31,20 @@ import java.util.List;
 public class LeadApiController {
 
     private final LeadService leadService;
-    private final LeadCsvImportService leadCsvImportService;
+    private final WebsiteLeadAdapter websiteLeadAdapter;
+    private final WebhookLeadAdapter webhookLeadAdapter;
+    private final CsvLeadAdapter csvLeadAdapter;
     private final ApiResponseMapper apiResponseMapper;
 
     public LeadApiController(LeadService leadService,
-                             LeadCsvImportService leadCsvImportService,
+                             WebsiteLeadAdapter websiteLeadAdapter,
+                             WebhookLeadAdapter webhookLeadAdapter,
+                             CsvLeadAdapter csvLeadAdapter,
                              ApiResponseMapper apiResponseMapper) {
         this.leadService = leadService;
-        this.leadCsvImportService = leadCsvImportService;
+        this.websiteLeadAdapter = websiteLeadAdapter;
+        this.webhookLeadAdapter = webhookLeadAdapter;
+        this.csvLeadAdapter = csvLeadAdapter;
         this.apiResponseMapper = apiResponseMapper;
     }
 
@@ -48,19 +56,19 @@ public class LeadApiController {
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public LeadResponse createLead(@Valid @RequestBody CreateLeadRequest request) {
-        return apiResponseMapper.toLeadResponse(leadService.createLead(request));
+        return apiResponseMapper.toLeadResponse(websiteLeadAdapter.capture(request));
     }
 
     @PostMapping("/webhook")
     @ResponseStatus(HttpStatus.CREATED)
-    public LeadResponse createLeadFromWebhook(@Valid @RequestBody CreateLeadRequest request) {
-        request.setSource(LeadSource.WEBHOOK);
-        return apiResponseMapper.toLeadResponse(leadService.createLead(request));
+    public LeadResponse createLeadFromWebhook(@Valid @RequestBody CreateLeadRequest request,
+                                             @RequestHeader(value = "X-Integration-Key", required = false) String apiKey) {
+        return apiResponseMapper.toLeadResponse(webhookLeadAdapter.capture(request, apiKey));
     }
 
     @PostMapping(path = "/import/csv", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public LeadImportResponse importLeadsFromCsv(@RequestParam("file") MultipartFile file) {
-        return leadCsvImportService.importCsv(file);
+        return csvLeadAdapter.importFile(file);
     }
 
     @PatchMapping("/{leadId}/status")

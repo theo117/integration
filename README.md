@@ -6,6 +6,7 @@ Business Operations Hub is a portfolio-grade Spring Boot application that demons
 
 - Lead capture through manual entry and simulated webhook ingestion
 - CSV lead import for spreadsheet-style intake
+- Integration event log for inbound, outbound, failed, and skipped integration activity
 - Mini CRM pipeline with status updates from `NEW` to `WON` or `LOST`
 - Invoice tracking with pending, paid, and overdue visibility
 - Notifications for new leads, status movement, and overdue invoices
@@ -56,12 +57,14 @@ Open:
 
 - Dashboard: `http://localhost:8080/dashboard`
 - Reporting: `http://localhost:8080/reports`
+- Integrations: `http://localhost:8080/integrations`
 - H2 Console: `http://localhost:8080/h2-console`
 
 When using the dev profile:
 
 - Dashboard: `http://localhost:8081/dashboard`
 - Reporting: `http://localhost:8081/reports`
+- Integrations: `http://localhost:8081/integrations`
 - H2 Console: `http://localhost:8081/h2-console`
 
 H2 connection settings:
@@ -77,6 +80,7 @@ metadata and `dashboard.js` attaches it to JSON and CSV upload requests automati
 
 - `GET /api/dashboard`
 - `GET /api/reports`
+- `GET /api/integrations/events`
 - `GET /api/leads`
 - `POST /api/leads`
 - `POST /api/leads/webhook`
@@ -85,6 +89,47 @@ metadata and `dashboard.js` attaches it to JSON and CSV upload requests automati
 - `GET /api/invoices`
 - `POST /api/invoices`
 - `PATCH /api/invoices/{id}/status`
+
+## Integration demo
+
+The project now demonstrates integrations through explicit adapter-style entry points and a visible event log.
+
+- Website/API lead intake records a `WEBSITE_LEAD` event.
+- Signed webhook intake records accepted and rejected `WEBHOOK_LEAD` events.
+- CSV import records a `CSV_IMPORT` event with imported and skipped counts.
+- Lead status and invoice workflow changes record operational events.
+- Email automation records `SENT`, `SKIPPED`, or `FAILED` outbound events, including retry timing for failures.
+
+View recent integration activity at:
+
+- `GET /integrations`
+- `GET /api/integrations/events`
+
+Download the header-only CSV import template at:
+
+- `GET /samples/lead-import-template.csv`
+
+Webhook requests are intended for external systems, so they are CSRF-exempt and protected with `X-Integration-Key` instead:
+
+```bash
+curl -X POST http://localhost:8080/api/leads/webhook \
+  -H "Content-Type: application/json" \
+  -H "X-Integration-Key: local-webhook-key" \
+  -d '{
+    "name": "Contact Name",
+    "email": "contact@example.com",
+    "phone": "+27000000000",
+    "company": "Company Name",
+    "source": "WEBHOOK",
+    "notes": "External system handoff"
+  }'
+```
+
+Change the local webhook key in `application.properties`:
+
+```properties
+businesshub.integration.webhook-api-key=local-webhook-key
+```
 
 ## Authentication
 
@@ -98,7 +143,7 @@ On first startup, the application seeds bootstrap accounts into the `app_users` 
 Access rules:
 
 - `ADMIN`: dashboard, reports, and operational APIs
-- `OPS`: dashboard and operational APIs
+- `OPS`: dashboard, integrations, and operational APIs
 - reports are restricted to admins
 - user management is restricted to admins
 
@@ -198,6 +243,7 @@ Add these environment variables in Render:
 BUSINESSHUB_EMAIL_ENABLED=true
 BUSINESSHUB_EMAIL_FROM=you@example.com
 BUSINESSHUB_EMAIL_OPS_INBOX=ops@example.com
+BUSINESSHUB_INTEGRATION_WEBHOOK_API_KEY=replace-with-a-long-random-key
 SPRING_MAIL_HOST=smtp.example.com
 SPRING_MAIL_PORT=587
 SPRING_MAIL_USERNAME=you@example.com

@@ -334,6 +334,36 @@ td span,
     font-weight: 700;
 }
 
+.event-status {
+    display: inline-flex;
+    align-items: center;
+    min-width: 96px;
+    justify-content: center;
+    padding: 7px 10px;
+    border-radius: 999px;
+    background: rgba(20, 33, 61, 0.08);
+    color: var(--text);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.event-status.processed,
+.event-status.sent {
+    background: rgba(21, 127, 91, 0.12);
+    color: var(--success);
+}
+
+.event-status.failed,
+.event-status.pending_retry {
+    background: rgba(184, 92, 56, 0.12);
+    color: var(--warning);
+}
+
+.event-status.skipped {
+    background: rgba(84, 97, 121, 0.12);
+    color: var(--muted);
+}
+
 .notification-list {
     display: grid;
     gap: 14px;

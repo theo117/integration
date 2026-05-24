@@ -33,6 +33,7 @@
 
         <nav class="sidebar-nav">
             <a class="nav-link" th:href="@{/dashboard}">Dashboard</a>
+            <a class="nav-link" th:if="${canViewIntegrations}" th:href="@{/integrations}">Integrations</a>
             <a class="nav-link" th:if="${isAdmin}" th:href="@{/reports}">Reporting</a>
             <a class="nav-link" th:if="${isAdmin}" th:href="@{/admin/users}">Users</a>
             <a class="nav-link active" th:href="@{/account/security}">Security</a>

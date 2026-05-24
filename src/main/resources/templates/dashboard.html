@@ -127,19 +127,19 @@
                     <div class="input-grid">
                         <label>
                             Full name
-                            <input name="name" placeholder="Nandi Mokoena" required>
+                            <input name="name" placeholder="Contact name" required>
                         </label>
                         <label>
                             Company
-                            <input name="company" placeholder="Luma Studio" required>
+                            <input name="company" placeholder="Company name" required>
                         </label>
                         <label>
                             Email
-                            <input type="email" name="email" placeholder="lead@company.co.za" required>
+                            <input type="email" name="email" placeholder="contact@example.com" required>
                         </label>
                         <label>
                             Phone
-                            <input name="phone" placeholder="+27 82 555 0111" required>
+                            <input name="phone" placeholder="Phone number" required>
                         </label>
                         <label>
                             Source
@@ -184,11 +184,11 @@
                     <div class="input-grid">
                         <label>
                             Client name
-                            <input name="clientName" placeholder="Craft Logic" required>
+                            <input name="clientName" placeholder="Client name" required>
                         </label>
                         <label>
                             Amount (ZAR)
-                            <input type="number" min="0.01" step="0.01" name="amount" placeholder="18500.00" required>
+                            <input type="number" min="0.01" step="0.01" name="amount" placeholder="0.00" required>
                         </label>
                         <label>
                             Due date
@@ -229,10 +229,10 @@
                         <tbody id="lead-table-body">
                         <tr th:each="lead : ${dashboard.recentLeads}">
                             <td>
-                                <strong th:text="${lead.name}">Nandi</strong>
+                                <strong th:text="${lead.name}">Contact name</strong>
                                 <span th:text="${lead.email}">lead@email.com</span>
                             </td>
-                            <td th:text="${lead.company}">Luma Studio</td>
+                            <td th:text="${lead.company}">Company name</td>
                             <td th:text="${lead.source}">WEBSITE</td>
                             <td>
                                 <select class="status-select lead-status-select" th:attr="data-id=${lead.id}">
@@ -269,8 +269,8 @@
                                 <strong th:text="${invoice.invoiceNumber}">INV-001</strong>
                                 <span th:text="${#temporals.format(invoice.dueDate, 'dd MMM yyyy')}">30 Apr 2026</span>
                             </td>
-                            <td th:text="${invoice.clientName}">Craft Logic</td>
-                            <td th:text="|R ${#numbers.formatDecimal(invoice.amount, 1, 'COMMA', 2, 'POINT')}|">R 18,500.00</td>
+                            <td th:text="${invoice.clientName}">Client name</td>
+                            <td th:text="|R ${#numbers.formatDecimal(invoice.amount, 1, 'COMMA', 2, 'POINT')}|">R 0.00</td>
                             <td>
                                 <select class="status-select invoice-status-select" th:attr="data-id=${invoice.id}">
                                     <option th:each="status : ${invoiceStatuses}" th:value="${status}" th:text="${status}"

@@ -6,4 +6,5 @@ target/
 .project
 .settings/
 .mvn/apache-maven/
+.m2/
 *.log

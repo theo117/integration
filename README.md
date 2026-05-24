@@ -12,7 +12,7 @@ Business Operations Hub is a portfolio-grade Spring Boot application that demons
 - A polished dashboard UI built with Thymeleaf, CSS, and vanilla JavaScript
 - A monthly reporting page for lead, conversion, and invoice visibility
 - Email automation hooks with safe local fallback logging
-- Authentication with demo roles for admin and operations access
+- Authentication with admin and operations access
 - Admin user management with database-backed account creation and activation controls
 - Password reset and self-service password change flows
 

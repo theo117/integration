@@ -40,6 +40,15 @@ class SecurityIntegrationTest {
     }
 
     @Test
+    @WithMockUser(username = "ops", roles = "OPS")
+    void opsUserDoesNotSeeAdminOnlyNavigationLinks() throws Exception {
+        mockMvc.perform(get("/dashboard"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("href=\"/reports\""))))
+                .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString("href=\"/admin/users\""))));
+    }
+
+    @Test
     @WithMockUser(username = "admin", roles = "ADMIN")
     void adminUserCanAccessReportsPage() throws Exception {
         mockMvc.perform(get("/reports"))
